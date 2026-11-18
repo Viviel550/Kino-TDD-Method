@@ -1,234 +1,237 @@
-# Kino-TDD-Method
+# Frontend: Kino (Astro)
 
-Strona internetowa kina (frontend + backend) tworzona metodą **TDD (Test Driven Development)**. Gość przegląda repertuar, wybiera miejsca na mapie sali i rezerwuje je na imię i e-mail (płatność w kasie). Administrator zarządza filmami, seansami i rezerwacjami.
+Strona kina w Astro: repertuar, szczegóły filmu, mapa sali i rezerwacja miejsc oraz panel administratora. Dane pochodzą z [backendu](../backend/README.md) (REST API). Projekt rozwijamy metodą **TDD**, scenariusze są w [`../docs/use-cases.md`](../docs/use-cases.md).
 
-Projekt studencki, więc świadomie pomijamy bramkę płatniczą i rozbudowany system kont użytkowników.
+> **Stan na dziś:** skonfigurowane środowisko (Astro SSR, Preact, Vitest, MSW) z przykładowymi testami. Strony i komponenty to jeszcze szablon Astro (`index.astro`, `Welcome.astro`) oraz przykładowa wyspa `Hello.tsx`.
 
-## Spis treści
+## Technologie
 
-1. [Tech stack](#tech-stack)
-2. [Wymagania](#wymagania)
-3. [Szybki start](#szybki-start)
-4. [Gdzie co znaleźć](#gdzie-co-znaleźć)
-5. [Architektura](#architektura)
-6. [Podejście TDD](#podejście-tdd)
-7. [Testy](#testy)
-8. [Praca w zespole](#praca-w-zespole)
-
-## Tech stack
-
-| Warstwa | Technologia | Uwagi |
-|---|---|---|
-| Frontend | **Astro 7** + TypeScript | renderowanie na serwerze (SSR, adapter Node) |
-| Interaktywność | **Preact** | tylko tam, gdzie potrzeba („wyspy"), np. wybór miejsc |
-| Backend | **FastAPI** (Python 3.14) | REST API, automatyczna dokumentacja OpenAPI |
-| Baza danych | **SQLite** | plik, bez serwera i bez Dockera |
-| ORM i migracje | SQLAlchemy + Alembic | |
-| Testy backendu | **pytest** (+ pytest-cov, httpx) | jednostkowe, integracyjne, API |
-| Testy frontendu | **Vitest** + Testing Library + **MSW** | jednostkowe, komponenty, mockowanie API |
-| Testy E2E | **Playwright** | testy całej aplikacji w przeglądarce |
-| Jakość kodu | ruff, mypy (backend), `astro check` (frontend) | linter, formatowanie, typy |
-| Pakiety | **uv** (backend), **npm** (frontend) | lockfile'e w repozytorium |
-| Kontrakt API | OpenAPI (`docs/openapi.json`) | generowany z backendu, z niego powstają typy frontendu |
-| CI | GitHub Actions | planowane, jeszcze nie skonfigurowane |
+| Obszar | Wybór |
+|---|---|
+| Framework | Astro 7, renderowanie na serwerze (`output: 'server'`, adapter Node `standalone`) |
+| Interaktywność | wyspy w Preact |
+| Testy jednostkowe i komponentów | Vitest + Testing Library |
+| Mockowanie API | MSW |
+| Testy E2E | Playwright (jeszcze nieskonfigurowany) |
+| Typy kontraktu API | `openapi-typescript` + `openapi-fetch` |
+| Język | TypeScript (tryb `strict`) |
 
 ## Wymagania
 
-| Narzędzie | Wersja | Do czego |
-|---|---|---|
-| [uv](https://docs.astral.sh/uv/getting-started/installation/) | aktualna | backend (sam pobierze Pythona 3.14 i utworzy `.venv`) |
-| [Node.js](https://nodejs.org/) | 22.23.4 lub nowsza | frontend |
-| Git | dowolna | kontrola wersji |
-
-SQLite jest wbudowane w Pythona, więc nie trzeba niczego dodatkowo instalować.
+- **Node.js 22.23.4 lub nowszy** (pole `engines` w `package.json`). Sprawdź: `node --version`.
+- npm (instaluje się razem z Node).
+- Uruchomiony backend na `http://localhost:8000`, gdy chcesz oglądać prawdziwe dane. Do testów jednostkowych backend nie jest potrzebny.
 
 ## Szybki start
 
 ```bash
-git clone <adres-repozytorium>
-cd Kino-TDD-Method
-```
-
-**Backend** (http://localhost:8000):
-
-```bash
-cd backend
-uv sync
-uv run uvicorn app.main:app --reload
-```
-
-Sprawdzenie: http://localhost:8000/health, dokumentacja API: http://localhost:8000/docs
-
-**Frontend** (http://localhost:4321), w drugim terminalu:
-
-```bash
 cd frontend
-npm ci
-npm run dev
+npm ci              # instaluje dokładnie wersje z package-lock.json
+npm run dev         # http://localhost:4321
 ```
 
-Szczegóły, komendy testów i opis pakietów są w README każdej części: [backend/README.md](backend/README.md) i [frontend/README.md](frontend/README.md).
+## Komendy
 
-## Gdzie co znaleźć
+Wszystkie wykonujemy z katalogu `frontend/`.
 
-```
-Kino-TDD-Method/
-├── README.md                  ← jesteś tutaj
-├── docs/
-│   └── use-cases.md           # Use Case'y UC1–UC10, reguły biznesowe i lista testów
-├── backend/                   # FastAPI + SQLite
-│   ├── README.md              # uruchamianie, testy, pakiety, rady
-│   ├── pyproject.toml         # zależności i konfiguracja narzędzi
-│   ├── uv.lock                # dokładne wersje pakietów
-│   ├── app/                   # kod aplikacji
-│   │   ├── routes/            #   warstwa HTTP
-│   │   ├── services/          #   logika biznesowa (reguły z UC)
-│   │   ├── repositories/      #   dostęp do bazy
-│   │   ├── models/            #   tabele
-│   │   ├── schemas/           #   modele Pydantic (wejście/wyjście API)
-│   │   ├── db/                #   sesja, seed
-│   │   └── core/              #   zegar, hasła, sesje
-│   └── tests/
-│       ├── unit/              #   testy logiki
-│       ├── integration/       #   testy z prawdziwym SQLite
-│       └── api/               #   testy endpointów
-└── frontend/                  # Astro + Preact
-    ├── README.md              # uruchamianie, testy, pakiety, rady
-    ├── package.json           # zależności i skrypty
-    ├── src/
-    │   ├── pages/             #   strony i routing
-    │   ├── layouts/           #   wspólny układ stron
-    │   ├── components/        #   komponenty, w tym islands/ (interaktywne)
-    │   └── lib/               #   klient API, logika, formatowanie
-    └── tests/
-        ├── unit/              #   testy Vitest
-        ├── mocks/             #   serwer MSW (udawany backend)
-        └── e2e/               #   testy Playwright
-```
-
-Niektóre z tych katalogów są jeszcze puste lub nie istnieją. Pełny wykaz tego, co jest, a czego brakuje, znajduje się w README backendu i frontendu w sekcjach „Znane braki".
-
-| Szukasz… | Zajrzyj do |
+| Komenda | Co robi |
 |---|---|
-| wymagań i scenariuszy | [docs/use-cases.md](docs/use-cases.md) |
-| jak uruchomić backend i jego testy | [backend/README.md](backend/README.md) |
-| jak uruchomić frontend i jego testy | [frontend/README.md](frontend/README.md) |
-| listy pakietów i do czego służą | README backendu i frontendu, sekcje „Pakiety" |
-| kontraktu API | `/docs` działającego backendu, docelowo `docs/openapi.json` |
-
-## Architektura
-
-```
-Przeglądarka  →  Astro (SSR + wyspy Preact)  →  REST API (FastAPI)  →  SQLite
-```
-
-- **Frontend** renderuje strony na serwerze (repertuar, szczegóły filmu). Interaktywne są tylko wyspy, np. wybór miejsc w sali i formularz rezerwacji.
-- **Backend** wystawia REST API i zawiera całą logikę biznesową. Jest podzielony na warstwy, a zależności idą tylko w dół: `routes` → `services` → `repositories` → `models`.
-- **Reguła biznesowa** (np. limit 6 miejsc, seans musi być w przyszłości) trafia zawsze do `services`, nigdy do route'a ani repozytorium. Dzięki temu da się ją przetestować bez bazy i bez HTTP.
-- **Baza** pilnuje spójności niezależnie od kodu: ograniczenie `UNIQUE(screening_id, seat_id)` uniemożliwia podwójną rezerwację tego samego miejsca.
-- **Kontrakt API** jest jednym źródłem prawdy dla obu części. Backend generuje `openapi.json`, a z niego powstają typy TypeScript we frontendzie (`npm run gen:api`).
-
-### Aktorzy i Use Case'y
-
-| Aktor | Use Case'y |
-|---|---|
-| Gość | UC1 repertuar, UC2 szczegóły filmu, UC3 mapa sali, UC4 rezerwacja miejsc, UC5 podgląd rezerwacji po kodzie, UC6 anulowanie |
-| Administrator | UC7 logowanie, UC8 zarządzanie filmami, UC9 zarządzanie seansami, UC10 rezerwacje na seans |
-
-Pełne scenariusze, reguły biznesowe i oczekiwane wyniki testów są w [docs/use-cases.md](docs/use-cases.md).
-
-## Podejście TDD
-
-Najpierw opisujemy zachowanie **testem**, a dopiero potem piszemy kod. Pracujemy w cyklu:
-
-1. **Red:** napisz test dla jednego scenariusza i uruchom go. Test musi **paść**, bo kodu jeszcze nie ma. Jeśli przechodzi, test nic nie sprawdza.
-2. **Green:** napisz **minimum** kodu, żeby test przeszedł.
-3. **Refactor:** popraw strukturę kodu, nie zmieniając zachowania. Testy pilnują, że nic się nie zepsuło.
-4. Wróć do punktu 1 z następnym scenariuszem.
-
-### Jak wybieramy, co testować
-
-1. Wybierz jeden UC z [docs/use-cases.md](docs/use-cases.md) i uzgodnij go w zespole.
-2. Każdy scenariusz (przebieg główny i alternatywne) oraz każda reguła biznesowa ma co najmniej jeden test. Tabele w dokumencie są gotową listą testów.
-3. Zacznij od najniższej warstwy: testy jednostkowe logiki, potem integracyjne (baza), potem API, a na końcu E2E dla przebiegu głównego.
-
-Zalecana kolejność Use Case'ów: UC1 → UC2 → UC3 → UC4 → UC7 → UC9 → UC5 → UC6 → UC8 → UC10.
-
-### Zasady
-
-- **Test jest wymaganiem.** Nie zmieniamy testu tylko po to, żeby przeszedł. Najpierw ustalamy, czy zmienia się wymaganie.
-- **Oznaczamy testy identyfikatorem UC**, np. `UC4-A1` (UC4, przebieg alternatywny 1), w komentarzu lub w nazwie. Dzięki temu widać pokrycie wymagań.
-- **Nazwy opisują zachowanie:** `test_taken_seat_returns_409`, a nie `test1`.
-- **Testy są niezależne** i nie zakładają kolejności wykonania.
-- **Czas jest zależnością.** Serwisy dostają zegar (`Clock`), zamiast wołać `datetime.now()`, żeby testy były powtarzalne.
-- **Mały krok.** Jeden test, jeden fragment kodu, jeden commit.
+| `npm run dev` | serwer deweloperski na `localhost:4321` |
+| `npm run build` | build produkcyjny do `dist/` |
+| `npm run preview` | podgląd builda |
+| `npm test` | jednorazowe uruchomienie testów Vitest |
+| `npm run test:watch` | tryb watch: testy uruchamiają się po każdej zmianie pliku (wygodny w TDD) |
+| `npm run test:e2e` | testy Playwright (patrz „Znane braki") |
+| `npm run typecheck` | `astro check`: błędy typów w `.ts`, `.tsx` i `.astro` |
+| `npm run gen:api` | generuje typy TypeScript z `../docs/openapi.json` do `src/lib/api/api-types.ts` |
 
 ## Testy
 
-Piramida testów: dużo szybkich testów jednostkowych, mniej integracyjnych, kilka E2E.
+### Szybkie komendy
 
-| Poziom | Backend | Frontend |
-|---|---|---|
-| Jednostkowe | pytest + atrapy repozytoriów | Vitest (+ MSW dla serwisów API) |
-| Komponenty | | Vitest + Testing Library |
-| Integracyjne / API | pytest + SQLite + `TestClient` | MSW udaje backend |
-| E2E | | Playwright (rezerwacja, logowanie admina, dodanie seansu) |
-| Analiza statyczna | ruff, mypy | `astro check` (TypeScript) |
+| Komenda | Co robi |
+|---|---|
+| `npm test` | wszystkie testy jednostkowe |
+| `npm run test:watch` | testy w trybie ciągłym |
+| `npx vitest run tests/unit/msw.test.ts` | tylko jeden plik |
+| `npx vitest run -t "MSW przechwytuje"` | tylko testy o pasującej nazwie |
+| `npx vitest run --coverage` | pokrycie kodu, raport w terminalu i w `coverage/index.html` |
+| `npx vitest run --reporter=verbose` | nazwa każdego testu |
 
-### Najczęstsze komendy
+Folder `coverage/` jest generowany i ignorowany przez git (nie commitujemy go).
 
-```bash
-# backend (z katalogu backend/)
-uv run pytest                       # wszystkie testy
-uv run pytest --cov=app             # z pokryciem kodu
-uv run ruff check . && uv run mypy app
+### Rodzaje testów
 
-# frontend (z katalogu frontend/)
-npm test                            # wszystkie testy
-npm run test:watch                  # tryb ciągły, wygodny w TDD
-npm run typecheck                   # sprawdzenie typów
+| Rodzaj | Narzędzie | Gdzie | Co sprawdza |
+|---|---|---|---|
+| Funkcje i serwisy API | Vitest + MSW | `tests/unit/` | logika w `src/lib/`, obsługa odpowiedzi backendu (201, 409, 400, 500) |
+| Wyspy (Preact) | Vitest + Testing Library | `tests/unit/*.test.tsx` | zachowanie interfejsu: klikanie, blokady przycisków, limit 6 miejsc |
+| Komponenty `.astro` | Vitest + Container API | `tests/unit/` | wyrenderowany HTML |
+| Ścieżki użytkownika | Playwright | `tests/e2e/` | całość: przeglądarka → frontend → backend → baza |
+
+Zasada piramidy: dużo testów jednostkowych, kilka E2E tylko dla przebiegów głównych (rezerwacja, logowanie admina, dodanie seansu).
+
+### Co jest skonfigurowane
+
+| Plik | Rola |
+|---|---|
+| `vitest.config.ts` | `environment: 'jsdom'` (atrapa przeglądarki), `setupFiles`, `include` tylko `tests/unit/**/*.test.{ts,tsx}`, pokrycie przez `v8` |
+| `tests/setup.ts` | przed testami: ładuje dopasowania `jest-dom` (np. `toBeDisabled`) i uruchamia serwer MSW (`onUnhandledRequest: 'error'`) |
+| `tests/mocks/server.ts` | pusty serwer MSW, handlery dodaje się w testach przez `server.use(...)` |
+| `tests/unit/example.test.ts` | test kontrolny: czy Vitest, jsdom i `jest-dom` działają |
+| `tests/unit/msw.test.ts` | test kontrolny MSW |
+| `tests/unit/hello.test.tsx` | test kontrolny wyspy Preact (`src/components/islands/Hello.tsx`) |
+
+Pliki `example`, `msw`, `hello` i komponent `Hello.tsx` to **próbki do usunięcia** po powstaniu prawdziwych testów.
+
+### Jak działa MSW
+
+MSW przechwytuje żądania HTTP wychodzące z kodu i odpowiada w imieniu backendu, więc testy działają bez serwera, bazy i sieci.
+
+```ts
+import { http, HttpResponse } from 'msw';
+import { server } from '../mocks/server';
+
+it('mapuje 409 na SEAT_TAKEN', async () => {            // UC4-A1
+  server.use(
+    http.post('http://localhost:8000/reservations', () =>
+      HttpResponse.json({ error: 'SEAT_TAKEN' }, { status: 409 })),
+  );
+  // ... wywołaj funkcję z src/lib/services i sprawdź wynik
+});
 ```
 
-Pełne zestawy komend (pojedyncze pliki, filtry, pokrycie) są w README backendu i frontendu.
+- `server.use(...)` dodaje handler tylko na czas jednego testu (po teście `resetHandlers` go czyści).
+- `onUnhandledRequest: 'error'` powoduje, że test pada, gdy kod wysyła żądanie, którego nie zamockowano. To zabezpiecza przed testem, który przechodzi „przypadkiem".
+- **Mock musi odpowiadać kontraktowi backendu** (`docs/openapi.json`), a nie być wymyślony z głowy. Inaczej testy są zielone, a aplikacja nie działa z prawdziwym API.
+- MSW w Vitest działa tylko w procesie testu. Nie przechwyci żądań z serwera Astro uruchomionego osobno (np. w Playwright). Tam używa się `page.route` albo prawdziwego backendu.
 
-### Co oznacza „zielone"
+### Przykład testu wyspy
 
-Zanim wypchniesz kod, uruchom lokalnie:
+```tsx
+import { it, expect } from 'vitest';
+import { render, screen } from '@testing-library/preact';
+import { Hello } from '../../src/components/islands/Hello';
 
-| Część | Komenda |
+it('renderuje komponent', () => {
+  render(<Hello name="Jan" />);
+  expect(screen.getByText('Test wyspy Preact, Jan')).toBeInTheDocument();
+});
+```
+
+## Pakiety
+
+Definicje są w `package.json`, dokładne wersje w `package-lock.json`.
+
+### Uruchomieniowe (`dependencies`)
+
+| Pakiet | Do czego służy |
 |---|---|
-| Backend | `uv run ruff check . && uv run ruff format --check . && uv run mypy app && uv run pytest` |
-| Frontend | `npm run typecheck && npm test && npm run build` |
+| `astro` | framework: strony, routing, renderowanie na serwerze |
+| `@astrojs/node` | adapter Node, bez niego Astro nie uruchomi się w trybie SSR |
+| `@astrojs/preact` | integracja Preact z Astro (wyspy `.tsx`) |
+| `preact` | lekka biblioteka UI (alternatywa dla Reacta) do interaktywnych komponentów |
+| `openapi-fetch` | mały klient HTTP z typami wygenerowanymi z OpenAPI |
 
-## Praca w zespole
+### Deweloperskie (`devDependencies`)
 
-### Git
-
-- `main` ma być zawsze zielona (testy przechodzą). Nie commitujemy na nią bezpośrednio.
-- Pracujemy na gałęziach z numerem UC, np. `feature/uc4-reservation`, i scalamy przez pull request.
-- Commity w małych krokach, najlepiej parą test + implementacja:
-  - `test(uc4): taken seat returns 409`
-  - `feat(uc4): reserve seats`
-- Opis pull requesta: który UC, które scenariusze pokrywa, jak uruchomić testy.
-- Przed scaleniem ktoś inny przegląda kod (code review).
-
-### Czego nie commitujemy
-
-`.venv/`, `node_modules/`, `dist/`, `.astro/`, `coverage/`, `htmlcov/`, `.env`, pliki baz (`*.db`, `*.db-wal`, `*.db-shm`), `__pycache__/`.
-
-**Commitujemy za to** pliki blokujące wersje: `backend/uv.lock` i `frontend/package-lock.json`. Dzięki nim wszyscy mają te same wersje pakietów.
-
-### Zależności
-
-- Backend: `uv add pakiet` albo `uv add --dev pakiet`, potem commit `pyproject.toml` razem z `uv.lock`.
-- Frontend: `npm install pakiet` albo `npm install -D pakiet`, potem commit `package.json` razem z `package-lock.json`.
-- Do zwykłego instalowania po `git pull` używamy `uv sync` i `npm ci`.
-
-### Wspólne ustalenia do podjęcia
-
-| Temat | Do uzgodnienia |
+| Pakiet | Do czego służy |
 |---|---|
-| Kod błędu dla niepoprawnych danych | FastAPI domyślnie zwraca 422 |
-| Format pól JSON | `camelCase` (`seatIds`) czy `snake_case`. Wpływa na kontrakt z frontendem. |
-| Sposób przekazywania sesji admina | ciasteczko sesyjne, przy frontendzie i backendzie na różnych portach trzeba rozwiązać CORS i `SameSite` |
-| Wartości reguł | limit miejsc (6), czas anulowania (30 min), przerwa między seansami (15 min) trzymać w jednym miejscu (`config.py`) |
+| `vitest` | runner testów jednostkowych |
+| `@vitest/coverage-v8` | raport pokrycia kodu |
+| `jsdom` | symulacja przeglądarki (DOM) w testach |
+| `@testing-library/preact` | renderowanie wysp w testach i szukanie elementów jak użytkownik (rola, etykieta, tekst) |
+| `@testing-library/user-event` | realistyczne klikanie i pisanie w testach |
+| `@testing-library/jest-dom` | dodatkowe dopasowania: `toBeDisabled()`, `toBeInTheDocument()` |
+| `msw` | udawanie backendu na poziomie sieci |
+| `@playwright/test` | testy E2E w prawdziwej przeglądarce |
+| `openapi-typescript` | generuje typy TypeScript z `openapi.json` backendu |
+| `@astrojs/check` | silnik `astro check` (sprawdzanie typów w plikach `.astro`) |
+| `typescript` | kompilator i sprawdzanie typów |
+
+### Zarządzanie pakietami
+
+| Zadanie | Komenda |
+|---|---|
+| zainstalować dokładnie to, co w locku (po `git pull`, w CI) | `npm ci` |
+| dodać pakiet | `npm install nazwa` |
+| dodać pakiet deweloperski | `npm install -D nazwa` |
+| dodać integrację Astro | `npx astro add nazwa` |
+| usunąć pakiet | `npm uninstall nazwa` |
+
+Po każdej zmianie zależności commitujemy `package.json` razem z `package-lock.json`.
+
+## Struktura
+
+Poniżej układ docelowy (przynajmniej na razie). Elementy oznaczone `(brak)` jeszcze nie istnieją.
+
+```
+frontend/
+├── src/
+│   ├── pages/              # routing; dziś tylko index.astro (szablon)
+│   │   ├── movies/[id].astro            # (brak) UC2
+│   │   ├── screenings/[id].astro        # (brak) UC3, UC4
+│   │   ├── reservations/                # (brak) UC5, UC6
+│   │   └── admin/                       # (brak) UC7–UC10
+│   ├── layouts/            # Layout.astro (do przerobienia na BaseLayout)
+│   ├── components/
+│   │   ├── Welcome.astro   # szablon Astro, do usunięcia
+│   │   └── islands/        # interaktywne wyspy Preact (dziś tylko Hello.tsx)
+│   ├── lib/                # (brak) api/ (klient + typy), services/, format.ts, errors.ts
+│   └── middleware.ts       # (brak) ochrona /admin/*
+├── tests/
+│   ├── unit/               # testy Vitest
+│   ├── mocks/server.ts     # serwer MSW
+│   ├── setup.ts
+│   └── e2e/                # (brak) testy Playwright
+├── astro.config.mjs
+├── vitest.config.ts
+└── tsconfig.json           # JSX ustawiony pod Preact
+```
+
+**Co ma być interaktywne, a co nie.** Domyślnie wszystko jest zwykłym HTML-em renderowanym na serwerze (`.astro`). JavaScript dokładamy tylko tam, gdzie potrzeba: wybór miejsc, formularz rezerwacji, przycisk anulowania, formularze admina. To trzyma stronę lekką.
+
+**Logika poza komponentami.** Wywołania API, mapowanie błędów (409 → komunikat) i formatowanie dat trzymamy w `src/lib/`, a wyspy i strony zostają cienkie. Zwykłe funkcje testuje się najłatwiej.
+
+## Znane braki
+
+- **Playwright nie jest skonfigurowany.** Skrypt `npm run test:e2e` istnieje, ale nie ma `playwright.config.ts` ani katalogu `tests/e2e/`. Przed pierwszym uruchomieniem: dodać konfigurację i wykonać `npx playwright install chromium` (pobiera przeglądarkę).
+- **`npm run gen:api` nie zadziała**, dopóki nie powstanie `docs/openapi.json` (backend musi go wyeksportować).
+- **Brak `src/lib/`**, więc nie ma jeszcze klienta API ani serwisów.
+- **Pokrycie kodu** liczy tylko pliki `.ts` i `.tsx` z `src/`. Komponenty `.astro` nie wchodzą do raportu.
+- **Brak stylów** (Tailwind lub CSS) i brak `.env.example` (planowane `PUBLIC_API_URL=http://localhost:8000`).
+- Brak `.github/workflows/ci.yml`, więc testy nie uruchamiają się jeszcze automatycznie po pushu.
+- `AGENTS.md` to plik wygenerowany przez szablon Astro (opis dla agentów AI). Można go usunąć.
+
+## Rady dla osób pracujących nad frontendem
+
+**TDD we frontendzie**
+- Zacznij od `npm run test:watch` w osobnym terminalu. Pisz test, zobacz, że pada, napisz minimum kodu, refaktoryzuj.
+- Testuj to, co widzi użytkownik, a nie szczegóły implementacji. Szukaj elementów przez `getByRole`, `getByLabelText`, `getByText`, a w ostateczności przez `data-testid`.
+- Elementom, które klika Playwright, dawaj `data-testid` (np. `seat-A1`). Zmiana tekstu lub wyglądu nie zepsuje wtedy testów.
+- Oznaczaj testy identyfikatorem UC (`// UC4-A1`), tak jak w backendzie.
+- W testach importuj `describe`, `it`, `expect`, `vi` z `vitest`. Opcja `globals: true` jest włączona w configu, ale `tsconfig.json` nie zna jej typów, więc edytor i `astro check` zgłosiłyby błędy przy importach pominiętych.
+
+**Praca z API**
+- Nie ustalaj formatu żądań i odpowiedzi „na oko". Źródłem prawdy jest backend, czyli `docs/openapi.json`. Po jego zmianie uruchom `npm run gen:api`, a potem `npm run typecheck`, który pokaże miejsca do poprawy.
+- Nie edytuj ręcznie `src/lib/api/api-types.ts`, bo jest generowany i następne `gen:api` nadpisze zmiany.
+- Komponenty nie budują żądań HTTP same. Robią to serwisy w `src/lib/services/`, które używają klienta z `openapi-fetch`.
+- Błąd po stronie użytkownika (409, 400) pokazuj przy formularzu, a teksty komunikatów trzymaj w jednym miejscu (`lib/errors.ts`).
+
+**Astro**
+- Dane na stronach publicznych pobieraj w sekcji `---` pliku `.astro` (na serwerze) i przekazuj do wysp jako propsy.
+- Dyrektywa `client:load` ładuje wyspę od razu, `client:visible` dopiero po przewinięciu do niej. Używaj najlżejszej, która wystarcza.
+- Nie mieszaj frameworków wysp. W projekcie jest tylko Preact.
+- Pamiętaj o dostępności: etykiety pól formularza, `aria-pressed` na przyciskach wyboru miejsca, obsługa klawiatury. Mapa sali musi działać na telefonie.
+
+**Git i porządek**
+- Pracuj na gałęzi (`feature/uc1-repertoire`), a przed pushem uruchom `npm run typecheck && npm test && npm run build`.
+- Nie commituj: `node_modules/`, `dist/`, `.astro/`, `coverage/`, `.env`.
+- Używaj `npm ci` (nie `npm install`) do zwykłego instalowania, żeby nie zmieniać `package-lock.json` bez potrzeby.
+
+**Gdy coś nie działa**
+- `document is not defined`: test nie leży w `tests/unit/` albo config nie jest wczytany. Sprawdź `include` i `environment: 'jsdom'` w `vitest.config.ts`.
+- `toBeDisabled is not a function`: `tests/setup.ts` nie jest uruchamiany, sprawdź `setupFiles`.
+- Test pada z komunikatem o niezamockowanym żądaniu: dodaj handler MSW przez `server.use(...)`. To zamierzone działanie.
+- Błąd składni przy `.tsx`: sprawdź w `tsconfig.json` `"jsx": "react-jsx"` i `"jsxImportSource": "preact"` oraz integrację `preact()` w `astro.config.mjs`.
+- Dziwne zachowanie po zmianie zależności: usuń `node_modules` i uruchom `npm ci`.
