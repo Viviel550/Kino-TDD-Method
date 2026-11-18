@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+# nowy push na tę samą gałąź anuluje poprzedni, jeszcze trwający przebieg
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (FastAPI)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      DATABASE_URL: sqlite:///./test.db
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+
+      # uv pobierze Pythona z backend/.python-version (3.14) i zależności z uv.lock
+      - name: Instalacja zależności
+        run: uv sync --frozen
+
+      - name: Lint (ruff)
+        run: uv run ruff check .
+
+      - name: Format (ruff)
+        run: uv run ruff format --check .
+
+      - name: Typy (mypy)
+        run: uv run mypy app
+
+      - name: Testy (pytest)
+        run: uv run pytest --cov=app --cov-report=term-missing
+
+  frontend:
+    name: Frontend (Astro)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalacja zależności
+        run: npm ci
+
+      - name: Typy (astro check)
+        run: npm run typecheck --if-present
+
+      - name: Testy (Vitest)
+        run: npm run test --if-present
+
+      - name: Build
+        run: npm run build
