@@ -2,11 +2,11 @@
 front i backend
 
 ## Technologie 
- - Frontend: Do ustalenia
- - Testy Frontend: Do ustalenia
- - Backend : Do ustalenia
- - Testy Backend: Do ustalenia
- - Baza danych: Do ustalenia
+ - Frontend: Astro+Preact
+ - Testy Frontend: Vitest, MSW
+ - Backend : FastAPI
+ - Testy Backend: pytest
+ - Baza danych: SQLite
  
 ## Wymagania:
  - Brak

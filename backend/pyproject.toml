@@ -1,0 +1,49 @@
+[project]
+name = "Kino-Backend"
+version = "0.1.0"
+description = "Backend of our budget Kino"
+readme = "README.md"
+authors = [
+    { name = "Viviel550", email = "272851@student.pwr.edu.pl" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "alembic>=1.20.1",
+    "argon2-cffi>=25.1.0",
+    "fastapi>=0.163.2",
+    "itsdangerous>=2.2.0",
+    "pydantic-settings>=2.16.3",
+    "pydantic[email]>=2.14.3",
+    "sqlalchemy>=2.1.9",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[project.scripts]
+backend = "app.main:main"
+
+[build-system]
+requires = ["uv_build>=0.13.8,<0.14.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "app"
+module-root = ""
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "mypy>=2.4.1",
+    "pytest>=9.2.0",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.17.5",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.mypy]
+strict = true
+plugins = ["pydantic.mypy"]
