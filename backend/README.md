@@ -79,12 +79,17 @@ W katalogu `tests/` są na razie tylko `api/test_health.py` i pusty `unit/`. Kat
 
 ```python
 # tests/api/test_reservations_api.py
-def test_taken_seat_returns_409(client, repo):      # UC4-A1
+def test_taken_seat_returns_409(client, repo):  # UC4-A1
     repo.add_taken_seat(screening_id=1, seat_id=1)
-    res = client.post("/reservations", json={
-        "screeningId": 1, "seatIds": [1],
-        "name": "Jan Kowalski", "email": "jan@example.com",
-    })
+    res = client.post(
+        "/reservations",
+        json={
+            "screeningId": 1,
+            "seatIds": [1],
+            "name": "Jan Kowalski",
+            "email": "jan@example.com",
+        },
+    )
     assert res.status_code == 409
 ```
 
