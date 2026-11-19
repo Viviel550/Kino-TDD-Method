@@ -9,6 +9,7 @@ Strona kina w Astro: repertuar, szczegóły filmu, mapa sali i rezerwacja miejsc
 | Obszar | Wybór |
 |---|---|
 | Framework | Astro 7, renderowanie na serwerze (`output: 'server'`, adapter Node `standalone`) |
+| Styl | CSS Modules |
 | Interaktywność | wyspy w Preact |
 | Testy jednostkowe i komponentów | Vitest + Testing Library |
 | Mockowanie API | MSW |
@@ -199,9 +200,6 @@ frontend/
 - **`npm run gen:api` nie zadziała**, dopóki nie powstanie `docs/openapi.json` (backend musi go wyeksportować).
 - **Brak `src/lib/`**, więc nie ma jeszcze klienta API ani serwisów.
 - **Pokrycie kodu** liczy tylko pliki `.ts` i `.tsx` z `src/`. Komponenty `.astro` nie wchodzą do raportu.
-- **Brak stylów** (Tailwind lub CSS) i brak `.env.example` (planowane `PUBLIC_API_URL=http://localhost:8000`).
-- Brak `.github/workflows/ci.yml`, więc testy nie uruchamiają się jeszcze automatycznie po pushu.
-- `AGENTS.md` to plik wygenerowany przez szablon Astro (opis dla agentów AI). Można go usunąć.
 
 ## Rady dla osób pracujących nad frontendem
 
