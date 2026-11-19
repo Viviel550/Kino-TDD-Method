@@ -9,7 +9,7 @@ Projekt studencki, więc świadomie pomijamy bramkę płatniczą i rozbudowany s
 1. [Tech stack](#tech-stack)
 2. [Wymagania](#wymagania)
 3. [Szybki start](#szybki-start)
-4. [Gdzie co znaleźć](#gdzie-co-znaleźć)
+4. [Przykładowy schemat](#przykładowy-schemat)
 5. [Architektura](#architektura)
 6. [Podejście TDD](#podejście-tdd)
 7. [Testy](#testy)
@@ -69,7 +69,7 @@ npm run dev
 
 Szczegóły, komendy testów i opis pakietów są w README każdej części: [backend/README.md](backend/README.md) i [frontend/README.md](frontend/README.md).
 
-## Gdzie co znaleźć
+## Przykładowy schemat
 
 ```
 Kino-TDD-Method/
