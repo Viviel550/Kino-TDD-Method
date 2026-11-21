@@ -1,92 +1,20 @@
 # Schemat bazy danych (SQLite)
 
-Początkowy schemat dla Use Case'ów UC1–UC10 z [use-cases.md](use-cases.md). Konto klienta, płatności i typy biletów są celowo pominięte (rozszerzenia na później).
-
-## Diagram relacji (ERD)
-
-```mermaid
-erDiagram
-    movies ||--o{ movie_genres : "ma gatunki"
-    genres ||--o{ movie_genres : "opisuje filmy"
-    movies ||--o{ screenings : "jest grany w"
-    halls ||--o{ seats : "zawiera"
-    halls ||--o{ screenings : "gości"
-    screenings ||--o{ reservations : "ma"
-    reservations ||--|{ reservation_seats : "obejmuje"
-    seats ||--o{ reservation_seats : "jest rezerwowane w"
-    screenings ||--o{ reservation_seats : "zajmuje miejsca"
-
-    movies {
-        int id PK
-        text title
-        text description
-        int duration_min
-        text age_rating
-        text poster_url
-        text trailer_url
-        text release_date
-    }
-    genres {
-        int id PK
-        text name UK
-    }
-    movie_genres {
-        int movie_id PK
-        int genre_id PK
-    }
-    halls {
-        int id PK
-        text name UK
-    }
-    seats {
-        int id PK
-        int hall_id FK
-        text row_label
-        int seat_number
-    }
-    screenings {
-        int id PK
-        int movie_id FK
-        int hall_id FK
-        text starts_at
-        int base_price_grosz
-    }
-    reservations {
-        int id PK
-        int screening_id FK
-        text code UK
-        text customer_name
-        text customer_email
-        text status
-        text created_at
-        text cancelled_at
-    }
-    reservation_seats {
-        int reservation_id PK
-        int seat_id PK
-        int screening_id
-    }
-    admins {
-        int id PK
-        text login UK
-        text password_hash
-        text created_at
-    }
-```
+Początkowy schemat dla Use Case'ów UC1–UC10 z [use-cases.md](use-cases.md).
 
 ## Przegląd tabel
 
-| Tabela | Co przechowuje | Używana w |
-|---|---|---|
-| `movies` | filmy | UC1, UC2, UC8 |
-| `genres` | gatunki | UC1 (filtr), UC2 |
-| `movie_genres` | powiązanie filmów z gatunkami (wiele-do-wielu) | UC1, UC2 |
-| `halls` | sale kinowe | UC3, UC9 |
-| `seats` | miejsca w salach | UC3, UC4 |
-| `screenings` | seanse (film + sala + godzina) | UC1–UC4, UC9 |
-| `reservations` | rezerwacje klientów | UC4–UC6, UC10 |
-| `reservation_seats` | miejsca zajęte przez rezerwację | UC3, UC4, UC6 |
-| `admins` | konta administratorów | UC7 |
+| Tabela | Co przechowuje |
+|---|---|
+| `movies` | filmy |
+| `genres` | gatunki |
+| `movie_genres` | powiązanie filmów z gatunkami (wiele-do-wielu) |
+| `halls` | sale kinowe | 
+| `seats` | miejsca w salach |
+| `screenings` | seanse (film + sala + godzina) | 
+| `reservations` | rezerwacje klientów | 
+| `reservation_seats` | miejsca zajęte przez rezerwację |
+| `admins` | konta administratorów |
 
 Sesji administratora nie trzymamy w bazie. Wystarczy podpisane ciasteczko sesyjne.
 
@@ -104,7 +32,6 @@ Skróty: **PK** klucz główny, **FK** klucz obcy, **UNIQUE** wartość unikalna
 | `duration_min` | INTEGER | NOT NULL, > 0 | czas trwania w minutach |
 | `age_rating` | TEXT | | ograniczenie wiekowe (np. `b.o.`, `7`, `12`, `16`, `18`) |
 | `poster_url` | TEXT | | adres plakatu |
-| `trailer_url` | TEXT | | adres zwiastuna |
 | `release_date` | TEXT | | data premiery, format `YYYY-MM-DD` |
 
 ### `genres`: gatunki
@@ -234,19 +161,5 @@ Ograniczenia:
 - Opcjonalnie `PRAGMA journal_mode = WAL` i `PRAGMA busy_timeout = 5000` (mniej blokad przy równoległych żądaniach).
 - Tabele można tworzyć w trybie `STRICT` (SQLite 3.37+), wtedy baza pilnuje typów kolumn.
 
-## Dane startowe (seed)
 
-- 2 sale, np. 8 rzędów po 12 miejsc i 6 rzędów po 10 miejsc,
-- kilka gatunków i 5–8 filmów z opisami,
-- około 20 seansów na najbliższe dni, w tym jeden w przeszłości (do testów UC3-A2 i UC4-A4),
-- jedno konto administratora z hasłem zahashowanym argon2.
 
-## Możliwe rozszerzenia
-
-| Rozszerzenie | Zmiana w schemacie |
-|---|---|
-| Typy biletów (normalny/ulgowy) | tabela `ticket_types`, kolumna typu w `reservation_seats`, cena wyliczana |
-| Wygasanie nieodebranych rezerwacji | kolumna `expires_at` w `reservations`, nowy status `expired` |
-| Konto klienta i historia | tabela `users`, `user_id` (opcjonalne) w `reservations` |
-| Łatwiejsze sprawdzanie kolizji seansów | kolumna `ends_at` w `screenings` (wyliczana przy zapisie) |
-| Oceny filmów | tabela `ratings` |
