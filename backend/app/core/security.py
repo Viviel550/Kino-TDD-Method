@@ -4,6 +4,7 @@ bcrypt używa tylko pierwszych 72 bajtów hasła, a nowsze wersje biblioteki odr
 błędem. Dlatego limit jest jawny: hasło dłuższe niż 72 bajty w UTF-8 (to bajty, nie znaki, więc
 polskie litery liczą się podwójnie) jest odrzucane już przy ustawianiu.
 """
+
 from __future__ import annotations
 
 import bcrypt
@@ -15,14 +16,15 @@ def hash_password(password: str) -> str:
     raw = password.encode("utf-8")
     if len(raw) > MAX_PASSWORD_BYTES:
         raise ValueError(f"Hasło może mieć najwyżej {MAX_PASSWORD_BYTES} bajtów (UTF-8).")
-    return bcrypt.hashpw(raw, bcrypt.gensalt()).decode("ascii")
+    hashed: bytes = bcrypt.hashpw(raw, bcrypt.gensalt())
+    return hashed.decode("ascii")
 
 
 def verify_password(password_hash: str, password: str) -> bool:
     raw = password.encode("utf-8")
-    if len(raw) > MAX_PASSWORD_BYTES:        # takiego hasła nie dało się ustawić, więc nie może pasować
+    if len(raw) > MAX_PASSWORD_BYTES:  # takiego hasła nie dało się ustawić, więc nie może pasować
         return False
     try:
-        return bcrypt.checkpw(raw, password_hash.encode("ascii"))
-    except ValueError:                       # uszkodzony hash w bazie
+        return bool(bcrypt.checkpw(raw, password_hash.encode("ascii")))
+    except ValueError:  # uszkodzony hash w bazie
         return False

@@ -10,6 +10,7 @@ Użycie (z katalogu backend/):
 Hasło administratora: zmienna CINEMA_ADMIN_PASSWORD albo pytanie w terminalu (nie przez argument).
 Skrypt można uruchamiać wielokrotnie: istniejącej, zainicjalizowanej bazy nie rusza (bez --reset).
 """
+
 from __future__ import annotations
 
 import argparse
@@ -26,7 +27,7 @@ from app.db.connection import connect
 from app.db.seed import seed_demo
 
 SQL_DIR = Path(__file__).parent
-SCHEMA_VERSION = 1              # musi zgadzać się z PRAGMA user_version na końcu schema.sql
+SCHEMA_VERSION = 1  # musi zgadzać się z PRAGMA user_version na końcu schema.sql
 MIN_PASSWORD_LEN = 8
 
 
@@ -40,13 +41,18 @@ def is_initialized(path: Path) -> bool:
         return False
     conn = sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True)
     try:
-        return conn.execute("PRAGMA user_version").fetchone()[0] >= SCHEMA_VERSION
+        return bool(conn.execute("PRAGMA user_version").fetchone()[0] >= SCHEMA_VERSION)
     finally:
         conn.close()
 
 
-def init_database(path: str | os.PathLike, clock: Clock = system_clock, *,
-                  reset: bool = False, demo: bool = False) -> bool:
+def init_database(
+    path: str | os.PathLike[str],
+    clock: Clock = system_clock,
+    *,
+    reset: bool = False,
+    demo: bool = False,
+) -> bool:
     """Tworzy plik bazy, schemat i dane stałe. Zwraca True, jeśli baza została utworzona,
     False, jeśli już istniała (wtedy nic nie zmienia)."""
     path = Path(path)
@@ -55,8 +61,10 @@ def init_database(path: str | os.PathLike, clock: Clock = system_clock, *,
     if is_initialized(path):
         return False
     if path.exists() and path.stat().st_size > 0:
-        raise RuntimeError(f"{path} istnieje, ale nie jest zainicjalizowaną bazą kina. "
-                           "Użyj --reset, żeby ją skasować i utworzyć od nowa.")
+        raise RuntimeError(
+            f"{path} istnieje, ale nie jest zainicjalizowaną bazą kina. "
+            "Użyj --reset, żeby ją skasować i utworzyć od nowa."
+        )
     path.parent.mkdir(parents=True, exist_ok=True)
     try:
         conn = connect(path, "owner", clock)
@@ -73,8 +81,13 @@ def init_database(path: str | os.PathLike, clock: Clock = system_clock, *,
     return True
 
 
-def create_admin(path: str | os.PathLike, username: str, email: str, password: str,
-                 clock: Clock = system_clock) -> int:
+def create_admin(
+    path: str | os.PathLike[str],
+    username: str,
+    email: str,
+    password: str,
+    clock: Clock = system_clock,
+) -> int:
     """Dodaje konto administratora (hasło trafia do bazy tylko jako hash bcrypt). Zwraca id konta.
     Rzuca sqlite3.IntegrityError, jeśli login lub e-mail są już zajęte, a ValueError, jeśli
     hasło jest za krótkie albo za długie."""
@@ -84,7 +97,10 @@ def create_admin(path: str | os.PathLike, username: str, email: str, password: s
     try:
         cur = conn.execute(
             "INSERT INTO admin_accounts (username, email, password_hash, created_at) VALUES (?,?,?,?)",
-            (username, email, hash_password(password), int(clock())))
+            (username, email, hash_password(password), int(clock())),
+        )
+        if cur.lastrowid is None:  # po udanym INSERT nie powinno się zdarzyć
+            raise RuntimeError("INSERT nie zwrócił id konta.")
         return cur.lastrowid
     finally:
         conn.close()
@@ -103,7 +119,9 @@ def _read_password() -> str:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Inicjalizacja bazy danych kina.")
     parser.add_argument("--db", type=Path, default=None, help="ścieżka pliku bazy")
-    parser.add_argument("--reset", action="store_true", help="skasuj istniejącą bazę i utwórz od nowa")
+    parser.add_argument(
+        "--reset", action="store_true", help="skasuj istniejącą bazę i utwórz od nowa"
+    )
     parser.add_argument("--demo", action="store_true", help="dodaj przykładowe filmy i seanse")
     parser.add_argument("--admin-username")
     parser.add_argument("--admin-email")

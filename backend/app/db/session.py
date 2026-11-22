@@ -5,10 +5,12 @@
 
 W testach API podmień zegar: app.dependency_overrides[get_clock] = lambda: fake_clock
 """
+
 from __future__ import annotations
 
 import sqlite3
-from typing import Callable, Iterator
+from collections.abc import Callable, Iterator
+from typing import Annotated
 
 from fastapi import Depends
 
@@ -21,8 +23,11 @@ def get_clock() -> Clock:
     return system_clock
 
 
+ClockDep = Annotated[Clock, Depends(get_clock)]
+
+
 def _connection_dependency(role: str) -> Callable[..., Iterator[sqlite3.Connection]]:
-    def dependency(clock: Clock = Depends(get_clock)) -> Iterator[sqlite3.Connection]:
+    def dependency(clock: ClockDep) -> Iterator[sqlite3.Connection]:
         conn = connect(get_settings().db_path, role, clock)
         try:
             yield conn
@@ -33,6 +38,6 @@ def _connection_dependency(role: str) -> Callable[..., Iterator[sqlite3.Connecti
     return dependency
 
 
-guest_conn = _connection_dependency("guest")     # endpointy publiczne
-admin_conn = _connection_dependency("admin")     # /admin/*, po sprawdzeniu sesji
-auth_conn = _connection_dependency("auth")       # logowanie i weryfikacja sesji
+guest_conn = _connection_dependency("guest")  # endpointy publiczne
+admin_conn = _connection_dependency("admin")  # /admin/*, po sprawdzeniu sesji
+auth_conn = _connection_dependency("auth")  # logowanie i weryfikacja sesji

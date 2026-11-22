@@ -11,5 +11,5 @@ class Settings:
 
 
 def get_settings() -> Settings:
-    default = Path(__file__).resolve().parents[2] / "cinema.db"      # backend/cinema.db
+    default = Path(__file__).resolve().parents[2] / "cinema.db"  # backend/cinema.db
     return Settings(db_path=Path(os.environ.get("CINEMA_DB_PATH", default)))

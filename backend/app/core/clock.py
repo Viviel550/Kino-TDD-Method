@@ -1,11 +1,12 @@
 """Zegar aplikacji. Wszystko, co zależy od czasu (triggery, widoki, serwisy), bierze go stąd,
 dzięki czemu testy mogą go przesuwać zamiast czekać."""
+
 from __future__ import annotations
 
 import time
-from typing import Callable
+from collections.abc import Callable
 
-Clock = Callable[[], float]          # zwraca unix epoch w sekundach (UTC)
+Clock = Callable[[], float]  # zwraca unix epoch w sekundach (UTC)
 
 
 def system_clock() -> float:

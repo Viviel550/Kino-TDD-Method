@@ -55,6 +55,22 @@ Wszystkie komendy wykonujemy z katalogu `backend/`.
 | `uv run pytest --cov=app --cov-report=term-missing` | pokrycie z numerami linii bez testów |
 | `uv run pytest --cov=app --cov-report=html` | raport w `htmlcov/index.html` |
 
+### Baza danych
+Tworzenie i zapełnianie bazy kina.
+
+| Komenda| Co Robi|
+|---|---|
+|`uv run python -m app.db.init_db `| pusta baza + dane stałe (sale, miejsca, gatunki)|
+|`uv run python -m app.db.init_db --demo`| przykładowe filmy i seanse|
+|`uv run python -m app.db.init_db --admin-username admin --admin-email admin@kino.pl`| + Dodanie konta administratora |
+|`uv run python -m app.db.init_db --reset --demo`| skasuj plik bazy i zacznij od zera|
+
+Ścieżka bazy: --db albo zmienna CINEMA_DB_PATH (domyślnie backend/cinema.db).
+
+Hasło administratora: zmienna CINEMA_ADMIN_PASSWORD albo pytanie w terminalu (nie przez argument).
+
+Skrypt można uruchamiać wielokrotnie: istniejącej, zainicjalizowanej bazy nie rusza (bez --reset).
+
 ### Rodzaje testów i gdzie je pisać
 
 | Katalog | Rodzaj | Co sprawdza | Baza danych |

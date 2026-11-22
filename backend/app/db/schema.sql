@@ -45,7 +45,7 @@ CREATE TABLE screenings (
     end_time INTEGER NOT NULL,  -- end_time = start_time + (duration_min + cleaning_buffer_min) * 60
     base_price_grosze INTEGER NOT NULL CHECK (base_price_grosze > 0),
     CHECK (end_time > start_time)
-),
+);
 
 CREATE TABLE reservations (
     id TEXT PRIMARY KEY CHECK (  -- UUID v7 format
@@ -215,7 +215,7 @@ BEFORE UPDATE OF status ON reservations
 WHEN NEW.status = 'cancelled'
 BEGIN
     SELECT RAISE(ABORT, 'CANT_CANCEL_LESS_THAN_30_MIN_BEFORE')
-    WHERE app_now() + 30 * 60 > (SELECT start_time FROM screenings WHERE id = OLD.screening_id)
+    WHERE app_now() + 30 * 60 > (SELECT start_time FROM screenings WHERE id = OLD.screening_id);
 END;
 
 CREATE TRIGGER trg_reservations_immutable
