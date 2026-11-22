@@ -85,7 +85,7 @@ def seed_demo(conn: sqlite3.Connection, clock: Clock = system_clock) -> int:
                     start = first_midnight + day * DAY + hour * 3600
                     end = start + (minutes + buffer_min[room_id]) * 60
                     conn.execute(
-                        "INSERT INTO screenings (film_id, room_id, start_ts, end_ts, base_price_cents) "
+                        "INSERT INTO screenings (film_id, room_id, start_time, end_time, base_price_grosze) "
                         "VALUES (?,?,?,?,?)",
                         (film_id, room_id, start, end, PRICE_CENTS[room_id]),
                     )
