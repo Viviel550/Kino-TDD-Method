@@ -6,3 +6,5 @@ __pycache__
 .coverage
 .mypy_cache
 .idea
+cinema.db-shm
+cinema.db-wal
