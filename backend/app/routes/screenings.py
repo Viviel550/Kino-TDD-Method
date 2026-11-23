@@ -15,9 +15,9 @@ DAY_SECONDS = 86_400
 @router.get("/screenings")
 def list_screenings(
     day: Annotated[date, Query(alias="date")],
+    conn: Annotated[sqlite3.Connection, Depends(guest_conn)],
     title: str | None = None,
     genre: str | None = None,
-    conn: sqlite3.Connection = Depends(guest_conn),
 ) -> list[ScreeningOut]:
     """Nadchodzące seanse z jednego dnia (doba UTC), opcjonalnie przefiltrowane."""
     day_start = int(datetime.combine(day, time.min, tzinfo=UTC).timestamp())
