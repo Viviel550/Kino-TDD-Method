@@ -86,3 +86,11 @@ def test_filter_without_results_returns_empty_list(
 
     assert res.status_code == 200
     assert res.json() == []
+
+
+@pytest.mark.parametrize("bad_date", ["2026-13-45", "23-11-2026", "jutro", ""])
+def test_invalid_date_format_is_rejected(client, bad_date):  # UC1-A3
+    res = client.get("/screenings", params={"date": bad_date})
+
+    assert res.status_code == 422  # walidację robi FastAPI
+    assert res.json()["detail"][0]["loc"] == ["query", "date"]
