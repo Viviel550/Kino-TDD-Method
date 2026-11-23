@@ -1,6 +1,8 @@
 import uvicorn
 from fastapi import FastAPI
+
 from app.routes.screenings import router as screenings_router
+
 
 def create_app() -> FastAPI:
     app = FastAPI(title="Cinema API")
