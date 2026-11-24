@@ -108,3 +108,13 @@ def test_screening_after_polish_midnight_belongs_to_the_next_day(
 
     assert [i["screening_id"] for i in next_day.json()] == [screening_id]
     assert same_day.json() == []
+
+
+def test_without_date_returns_todays_screenings(client, add_film, add_screening, at):
+    film_id = add_film("Nocny Pociąg")
+    today = add_screening(film_id, start_time=at("2026-11-22", 18))
+    add_screening(film_id, start_time=at("2026-11-23", 18))  # jutro
+
+    res = client.get("/screenings")  # bez date
+
+    assert [i["screening_id"] for i in res.json()] == [today]
