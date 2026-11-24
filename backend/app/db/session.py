@@ -1,9 +1,7 @@
 """Zależności FastAPI: połączenie na żądanie, osobne dla każdej roli.
-
-    @router.get("/screenings")
-    def list_screenings(conn: sqlite3.Connection = Depends(guest_conn)): ...
-
-W testach API podmień zegar: app.dependency_overrides[get_clock] = lambda: fake_clock
+GuesConn - gość
+AdminConn - Admin
+AuthConn - Weryfikacja
 """
 
 from __future__ import annotations
@@ -41,3 +39,7 @@ def _connection_dependency(role: str) -> Callable[..., Iterator[sqlite3.Connecti
 guest_conn = _connection_dependency("guest")  # endpointy publiczne
 admin_conn = _connection_dependency("admin")  # /admin/*, po sprawdzeniu sesji
 auth_conn = _connection_dependency("auth")  # logowanie i weryfikacja sesji
+
+GuestConn = Annotated[sqlite3.Connection, Depends(guest_conn)]
+AdminConn = Annotated[sqlite3.Connection, Depends(admin_conn)]
+AuthConn = Annotated[sqlite3.Connection, Depends(auth_conn)]

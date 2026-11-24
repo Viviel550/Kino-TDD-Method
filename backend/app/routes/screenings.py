@@ -1,10 +1,9 @@
-import sqlite3
 from datetime import UTC, date, datetime, time
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Query
 
-from app.db.session import guest_conn
+from app.db.session import GuestConn
 from app.schemas.screening import ScreeningOut
 
 router = APIRouter()
@@ -15,7 +14,7 @@ DAY_SECONDS = 86_400
 @router.get("/screenings")
 def list_screenings(
     day: Annotated[date, Query(alias="date")],
-    conn: Annotated[sqlite3.Connection, Depends(guest_conn)],
+    conn: GuestConn,
     title: str | None = None,
     genre: str | None = None,
 ) -> list[ScreeningOut]:
