@@ -1,4 +1,4 @@
-from datetime import UTC,date, datetime
+from datetime import UTC, date, datetime
 
 from app.core.timezone import day_bounds
 
