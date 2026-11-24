@@ -1,8 +1,9 @@
-from datetime import UTC, date, datetime, time
+from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, Query
 
+from app.core.timezone import day_bounds
 from app.db.session import GuestConn
 from app.schemas.screening import ScreeningOut
 
@@ -19,12 +20,11 @@ def list_screenings(
     genre: str | None = None,
 ) -> list[ScreeningOut]:
     """Nadchodzące seanse z jednego dnia (doba UTC), opcjonalnie przefiltrowane."""
-    day_start = int(datetime.combine(day, time.min, tzinfo=UTC).timestamp())
-
+    day_start, day_end = day_bounds(day)
     # Widok v_upcoming_screenings zwraca tylko seanse, które jeszcze się nie zaczęły (BR1.1).
     # W tekście SQL są wyłącznie stałe fragmenty, wartości od użytkownika idą jako parametry.
     sql = "SELECT * FROM v_upcoming_screenings WHERE start_time >= ? AND start_time < ?"
-    params: list[object] = [day_start, day_start + DAY_SECONDS]
+    params: list[object] = [day_start, day_end]
     if title:
         sql += " AND instr(lower(film_title), lower(?)) > 0"
         params.append(title)
