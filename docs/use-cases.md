@@ -48,7 +48,7 @@ Propozycja iteracji: sprint 1 to Katalog, sprint 2 to Rezerwacje, sprint 3 to Ad
 | `UC1-M` | lista seansów na dzień | J, API | 200, lista posortowana po czasie |
 | `UC1-A1` | dzień bez seansów | API | 200, pusta lista |
 | `UC1-A2` | filtr bez wyników | API | 200, pusta lista |
-| `UC1-A3` | zły format daty | API | 400 |
+| `UC1-A3` | zły format daty | API | 422 |
 | `UC1-BR1.1` | seans z przeszłości nie jest zwracany | J | brak seansu na liście |
 
 ### UC2: Podgląd szczegółów filmu
@@ -263,4 +263,3 @@ Propozycja iteracji: sprint 1 to Katalog, sprint 2 to Rezerwacje, sprint 3 to Ad
 | UC8 | 4 | 1 | 1 | 3 | 0 | do zrobienia |
 | UC9 | 7 | 6 | 0 | 2 | 1 | do zrobienia |
 | UC10 | 3 | 1 | 0 | 2 | 0 | do zrobienia |
-
