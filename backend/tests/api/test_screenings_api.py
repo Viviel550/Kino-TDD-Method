@@ -94,3 +94,17 @@ def test_invalid_date_format_is_rejected(client, bad_date):  # UC1-A3
 
     assert res.status_code == 422  # walidację robi FastAPI
     assert res.json()["detail"][0]["loc"] == ["query", "date"]
+
+
+def test_screening_after_polish_midnight_belongs_to_the_next_day(
+    client, add_film, add_screening, at
+):  # doba w czasie kina (Europe/Warsaw)
+    film_id = add_film("Nocny Pociąg")
+    # 23.11 23:30 UTC = 24.11 00:30 w Polsce
+    screening_id = add_screening(film_id, start_time=at("2026-11-23", 23, 30))
+
+    next_day = client.get("/screenings", params={"date": "2026-11-24"})
+    same_day = client.get("/screenings", params={"date": "2026-11-23"})
+
+    assert [i["screening_id"] for i in next_day.json()] == [screening_id]
+    assert same_day.json() == []
